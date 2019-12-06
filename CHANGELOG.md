@@ -6,6 +6,8 @@
 
 Breaking changes:
 
+- `TerminalProcess` instances will not handle shell escaping anymore. It will be up to callers to provide all the arguments required for shells to process commands.
+- Moved shell escaping utilities into `@theia/process/lib/common/shell-quoting` and `@theia/process/lib/common/shell-command-builder` for creating shell inputs.
 - Updated `example-browser` and `example-electron` applications to remove extensions which are instead contributed by VS Code builtin extensions [#6883](https://github.com/eclipse-theia/theia/pull/6883)
   - Extensions removed from the example applications are deprecated and will be removed in the future. If adopters/extenders would like to continue
   using the deprecated extensions, they must be self-maintained and can be accessed through the repository's Git history.
@@ -29,6 +31,7 @@ Breaking changes:
     - One can resolve a current color value programmatically with `ColorRegistry.getCurrentColor`.
     - One can load a new color theme:
       - in the frontend module to enable it on startup
+
         ```ts
             MonacoThemingService.register({
                 id: 'myDarkTheme',
@@ -40,7 +43,9 @@ Breaking changes:
                 }
             });
         ```
+
       - later from a file:
+
         ```ts
             @inject(MonacoThemingService)
             protected readonly monacoThemeService: MonacoThemingService;
@@ -52,6 +57,7 @@ Breaking changes:
                 uri: 'file:///absolute/path/to/my_theme.json'
             });
         ```
+
       - or install from a VS Code extension.
     - One should not introduce css color variables anymore or hardcode colors in css.
     - One can contribute new colors by implementing `ColorContribution` contribution point and calling `ColorRegistry.register`.
@@ -71,6 +77,11 @@ Breaking changes:
   Before these attributes have to be computed for all nodes and stored as a part of the layout.
   From now on they will be computed only on demand for visible nodes.
   It decreases requirements to the local storage and allows to invalidate node appearance by simply rerendering a tree.
+  - [process] `TerminalProcess` doesn't handle shell quoting, the shell process
+    arguments must be prepared from the caller. Removed all methods related to
+    shell escaping inside this class. You should use functions located in
+    `@theia/process/lib/common/shell-quoting.ts` in order to process arguments
+    for shells.
 
 ## v0.14.0
 
