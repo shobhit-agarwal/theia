@@ -18,7 +18,7 @@ import { injectable, inject, postConstruct } from 'inversify';
 import { Message } from '@phosphor/messaging';
 import URI from '@theia/core/lib/common/uri';
 import { CommandService, SelectionService } from '@theia/core/lib/common';
-import { CommonCommands, CorePreferences, ViewContainerTitleOptions, Key } from '@theia/core/lib/browser';
+import { CommonCommands, CorePreferences, ViewContainerTitleOptions, Key, SelectableTreeNode, CompositeTreeNode, NodeProps } from '@theia/core/lib/browser';
 import {
     ContextMenuRenderer, ExpandableTreeNode,
     TreeProps, TreeModel, TreeNode
@@ -72,9 +72,10 @@ export class FileNavigatorWidget extends FileTreeWidget {
         super.init();
         this.updateSelectionContextKeys();
         this.toDispose.pushAll([
-            this.model.onSelectionChanged(() =>
-                this.updateSelectionContextKeys()
-            ),
+            this.model.onSelectionChanged(event => {
+                this.updateSelectionContextKeys();
+                this.drawGuideLines(event);
+            }),
             this.model.onExpansionChanged(node => {
                 if (node.expanded && node.children.length === 1) {
                     const child = node.children[0];
@@ -248,6 +249,27 @@ export class FileNavigatorWidget extends FileTreeWidget {
 
     protected updateSelectionContextKeys(): void {
         this.contextKeyService.explorerResourceIsFolder.set(DirNode.is(this.model.selectedNodes[0]));
+    }
+
+    protected nodesToDrawGuideLines = new Set<string>();
+    protected drawGuideLines(selectedNodes: readonly Readonly<SelectableTreeNode>[]): void {
+        this.nodesToDrawGuideLines.clear();
+        for (const node of selectedNodes) {
+            const parent = node.parent;
+            if (CompositeTreeNode.is(parent)) {
+                for (const sibling of parent.children) {
+                    this.nodesToDrawGuideLines.add(sibling.id);
+                }
+            }
+        }
+    }
+
+    protected createNodeClassNames(node: TreeNode, props: NodeProps): string[] {
+        const classNames = super.createNodeClassNames(node, props);
+        if (this.nodesToDrawGuideLines.has(node.id)) {
+            classNames.push('BAZINGA');
+        }
+        return classNames;
     }
 
 }
